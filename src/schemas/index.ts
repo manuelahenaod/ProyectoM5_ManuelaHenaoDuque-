@@ -36,3 +36,14 @@ export const issueSchema = z.object({
     .optional(),
 });
 
+export const ListissuesSchema = z.object({
+  owner: z
+    .string()
+    .min(1, "Repository owner is required."),
+
+  repo: z
+    .string()
+    .min(1, "Repository name is required."),
+
+});
+

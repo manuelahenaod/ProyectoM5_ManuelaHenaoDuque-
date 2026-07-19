@@ -110,3 +110,35 @@ export async function createIssue(
     );
   }
 }
+
+export async function listIssues(owner: string, repo: string) {
+  try {
+    const { data } = await octokit.issues.listForRepo({
+      owner,
+      repo,
+      state: "open",
+    });
+
+    return data.map((issue) => ({
+      number: issue.number,
+      title: issue.title,
+      url: issue.html_url,
+    }));
+  } catch (error: any) {
+    if (error.status === 401) {
+      throw new AuthenticationError(
+        "Authentication failed. Verify your GitHub Personal Access Token."
+      );
+    }
+
+    if (error.status === 404) {
+      throw new GitHubAPIError(
+        `The repository "${owner}/${repo}" was not found.`
+      );
+    }
+
+    throw new NetworkError(
+      "Unable to connect to GitHub."
+    );
+  }
+}
