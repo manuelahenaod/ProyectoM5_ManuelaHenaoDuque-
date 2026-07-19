@@ -11,7 +11,8 @@ server.registerTool(
   "list_repositories",
   {
     title: "List GitHub repositories",
-    description: "Lists all repositories for the authenticated GitHub user."
+    description:
+      "Returns all repositories belonging to the authenticated GitHub user.",
   },
   listRepositoriesTool
 );

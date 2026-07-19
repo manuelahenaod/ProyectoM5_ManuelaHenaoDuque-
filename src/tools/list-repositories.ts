@@ -8,17 +8,28 @@ export async function listRepositoriesTool() {
       content: [
         {
           type: "text" as const,
-          text: "No repositories were found for the authenticated user.",
+          text: "No repositories were found.",
         },
       ],
     };
   }
 
+  const response = repositories
+    .map(
+      (repo) => `
+        ${repo.name}
+        Description: ${repo.description}
+        Private: ${repo.private ? "Yes" : "No"}
+        URL: ${repo.url}
+        `
+    )
+    .join("\n");
+
   return {
     content: [
       {
         type: "text" as const,
-        text: JSON.stringify(repositories, null, 2),
+        text: response,
       },
     ],
   };
