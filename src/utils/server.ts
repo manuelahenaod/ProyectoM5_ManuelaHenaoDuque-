@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { listRepositoriesTool } from "../tools/list-repositories.js";
+import { createRepositoryTool } from "../tools/create-repository.js";
+import { repositorySchema } from "../schemas/index.js";
 
 const server = new McpServer({
   name: "github-mcp-server",
@@ -15,6 +17,17 @@ server.registerTool(
       "Returns all repositories belonging to the authenticated GitHub user.",
   },
   listRepositoriesTool
+
+);
+
+server.registerTool(
+  "create_repository",
+  {
+    title: "Create GitHub Repository",
+    description: "Creates a new repository in the authenticated GitHub account.",
+    inputSchema: repositorySchema,
+  },
+  createRepositoryTool
 );
 
 async function main() {
