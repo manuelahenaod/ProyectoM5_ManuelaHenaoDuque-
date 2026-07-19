@@ -72,3 +72,41 @@ export async function createRepository(
     );
   }
 }
+
+export async function createIssue(
+  owner: string,
+  repo: string,
+  title: string,
+  body?: string
+) {
+  try {
+    const { data } = await octokit.issues.create({
+      owner,
+      repo,
+      title,
+      body,
+    });
+
+    return {
+      number: data.number,
+      title: data.title,
+      url: data.html_url,
+    };
+  } catch (error: any) {
+    if (error.status === 401) {
+      throw new AuthenticationError(
+        "Authentication failed. Verify your GitHub Personal Access Token."
+      );
+    }
+
+    if (error.status === 404) {
+      throw new GitHubAPIError(
+        `The repository "${owner}/${repo}" was not found.`
+      );
+    }
+
+    throw new NetworkError(
+      "Unable to connect to GitHub."
+    );
+  }
+}

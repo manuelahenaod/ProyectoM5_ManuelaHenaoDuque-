@@ -2,7 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { listRepositoriesTool } from "../tools/list-repositories.js";
 import { createRepositoryTool } from "../tools/create-repository.js";
-import { repositorySchema } from "../schemas/index.js";
+import { issueSchema, repositorySchema } from "../schemas/index.js";
+import { createIssueTool } from "../tools/create-issue.js";
 
 const server = new McpServer({
   name: "github-mcp-server",
@@ -28,6 +29,16 @@ server.registerTool(
     inputSchema: repositorySchema,
   },
   createRepositoryTool
+);
+
+server.registerTool(
+  "create_issue",
+  {
+    title: "Create GitHub Issue",
+    description: "Creates a new issue in a GitHub repository.",
+    inputSchema: issueSchema,
+  },
+  createIssueTool
 );
 
 async function main() {
