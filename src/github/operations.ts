@@ -142,3 +142,72 @@ export async function listIssues(owner: string, repo: string) {
     );
   }
 }
+
+export async function createCommit(
+  owner: string,
+  repo: string,
+  path: string,
+  message: string,
+  content: string
+) {
+  try {
+    const encodedContent = Buffer.from(content).toString("base64");
+
+    let sha: string | undefined;
+
+    // Verificar si el archivo ya existe
+    try {
+      const { data } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+      });
+
+      if (!Array.isArray(data) && data.type === "file") {
+        sha = data.sha;
+      }
+    } catch (error: any) {
+      // Si el archivo no existe (404), continuamos sin SHA.
+      // GitHub creará un archivo nuevo.
+      if (error.status !== 404) {
+        throw error;
+      }
+    }
+
+    const { data } = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path,
+      message,
+      content: encodedContent,
+      sha,
+    });
+
+    return {
+      commitSha: data.commit.sha,
+      url: data.commit.html_url,
+    };
+  } catch (error: any) {
+    if (error.status === 401) {
+      throw new AuthenticationError(
+        "Authentication failed. Verify your GitHub Personal Access Token."
+      );
+    }
+
+    if (error.status === 404) {
+      throw new GitHubAPIError(
+        `The repository "${owner}/${repo}" was not found.`
+      );
+    }
+
+    if (error.status === 422) {
+      throw new GitHubAPIError(
+        "The commit could not be created. Verify the repository, file path, and commit information."
+      );
+    }
+
+    throw new NetworkError(
+      "Unable to connect to GitHub."
+    );
+  }
+}

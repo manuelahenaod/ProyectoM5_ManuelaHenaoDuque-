@@ -1,5 +1,5 @@
 import { createRepository } from "../github/operations.js";
-import { formatGitHubError } from "../errors/index.js";
+import { errorResponse, successResponse } from "../utils/mcp-response.js";
 
 type CreateRepositoryArgs = {
   name: string;
@@ -13,26 +13,12 @@ export async function createRepositoryTool(args: CreateRepositoryArgs) {
       args.description
     );
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text:
-            `✅ Repository "${repository.name}" created successfully!\n\n` +
-            `Description: ${repository.description ?? "No description"}\n` +
-            `URL: ${repository.url}`,
-        },
-      ],
-    };
+    return successResponse(
+      `Repository "${repository.name}" created successfully!\n\n` +
+      `Description: ${repository.description ?? "No description"}\n` +
+      `URL: ${repository.url}`
+    );
   } catch (error) {
-    return {
-      isError: true,
-      content: [
-        {
-          type: "text" as const,
-          text: formatGitHubError(error),
-        },
-      ],
-    };
+    return errorResponse(error);
   }
 }

@@ -47,3 +47,25 @@ export const ListissuesSchema = z.object({
 
 });
 
+export const commitSchema = z.object({
+  owner: z
+    .string()
+    .min(1, "Repository owner is required."),
+
+  repo: z
+    .string()
+    .min(1, "Repository name is required."),
+
+  path: z
+    .string()
+    .min(1, "File path is required."),
+
+  message: z
+    .string()
+    .min(3, "Commit message must contain at least 3 characters.")
+    .max(100, "Commit message cannot exceed 100 characters."),
+
+  content: z
+    .string()
+    .min(1, "File content cannot be empty."),
+});

@@ -1,5 +1,5 @@
 import { createIssue } from "../github/operations.js";
-import { formatGitHubError } from "../errors/index.js";
+import { errorResponse, successResponse } from "../utils/mcp-response.js";
 
 type CreateIssueArgs = {
   owner: string;
@@ -17,26 +17,12 @@ export async function createIssueTool(args: CreateIssueArgs) {
       args.body
     );
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text:
-            `✅ Issue #${issue.number} created successfully!\n\n` +
-            `Title: ${issue.title}\n` +
-            `URL: ${issue.url}`,
-        },
-      ],
-    };
+    return successResponse(
+      `Issue #${issue.number} created successfully!\n\n` +
+      `Title: ${issue.title}\n` +
+      `URL: ${issue.url}`
+    );
   } catch (error) {
-    return {
-      isError: true,
-      content: [
-        {
-          type: "text" as const,
-          text: formatGitHubError(error),
-        },
-      ],
-    };
+    return errorResponse(error);
   }
 }

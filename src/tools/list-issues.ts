@@ -1,5 +1,5 @@
 import { listIssues } from "../github/operations.js";
-import { formatGitHubError } from "../errors/index.js";
+import { errorResponse, successResponse } from "../utils/mcp-response.js";
 
 type ListIssuesArgs = {
   owner: string;
@@ -11,14 +11,7 @@ export async function listIssuesTool(args: ListIssuesArgs) {
     const issues = await listIssues(args.owner, args.repo);
 
     if (issues.length === 0) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: "No open issues were found.",
-          },
-        ],
-      };
+      return successResponse("No open issues were found.");
     }
 
     const response = issues
@@ -28,23 +21,8 @@ export async function listIssuesTool(args: ListIssuesArgs) {
       )
       .join("\n\n");
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: response,
-        },
-      ],
-    };
+    return successResponse(response);
   } catch (error) {
-    return {
-      isError: true,
-      content: [
-        {
-          type: "text" as const,
-          text: formatGitHubError(error),
-        },
-      ],
-    };
+    return errorResponse(error);
   }
 }

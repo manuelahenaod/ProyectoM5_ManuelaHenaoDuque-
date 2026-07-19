@@ -1,36 +1,23 @@
 import { listRepositories } from "../github/operations.js";
+import {successResponse, errorResponse} from "../utils/mcp-response.js";
 
 export async function listRepositoriesTool() {
-  const repositories = await listRepositories();
+  try {
+    const repositories = await listRepositories();
 
-  if (repositories.length === 0) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: "No repositories were found.",
-        },
-      ],
-    };
+    if (repositories.length === 0) {
+      return successResponse("No repositories were found.");
+    }
+
+    const response = repositories
+      .map(
+        (repository) =>
+          `${repository.name}\n${repository.url}`
+      )
+      .join("\n\n");
+
+    return successResponse(response);
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  const response = repositories
-    .map(
-      (repo) => `
-        ${repo.name}
-        Description: ${repo.description}
-        Private: ${repo.private ? "Yes" : "No"}
-        URL: ${repo.url}
-        `
-    )
-    .join("\n");
-
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: response,
-      },
-    ],
-  };
 }
