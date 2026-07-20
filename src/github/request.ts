@@ -1,4 +1,5 @@
 import { logger } from "../utils/logging.js";
+import { retry } from "../utils/retry.js";
 import { handleGitHubError } from "../errors/handler.js";
 
 export type GitHubRequestOptions = {
@@ -13,7 +14,7 @@ export async function githubRequest<T>(
   try {
     logger.debug("Executing GitHub request...");
 
-    const { data } = await request();
+    const { data } = await retry(() => request());
 
     logger.debug("GitHub request completed successfully.");
 
