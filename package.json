@@ -1,12 +1,12 @@
 {
-  "name": "proyectom5",
+  "name": "github-mcp-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/utils/server.js",
+  "description": "MCP Server para interactuar con la API de GitHub usando Octokit",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/utils/server.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/utils/server.js",
+    "start": "node dist/index.js",
     "test": "vitest",
     "test:watch": "vitest --watch"
   },

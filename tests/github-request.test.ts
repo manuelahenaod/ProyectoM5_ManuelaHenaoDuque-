@@ -1,84 +1,62 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { githubRequest } from "../src/clients/github/request.js";
+import {
+  GitHubRateLimitError,
+  GitHubServerError,
+  mapGitHubError,
+} from "../src/clients/github/errors.js";
 
-import { githubRequest } from "../src/github/request.js";
-import { retry } from "../src/utils/retry.js";
-import { logger } from "../src/utils/logging.js";
-import { handleGitHubError } from "../src/errors/handler.js";
-
-vi.mock("../src/utils/retry.js", () => ({
-  retry: vi.fn(),
-}));
-
-vi.mock("../src/errors/handler.js", () => ({
-  handleGitHubError: vi.fn(),
-}));
-
-vi.mock("../src/utils/logging.js", () => ({
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+// Mock mapGitHubError para controlar los errores mapeados
+vi.mock("../src/clients/github/errors.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/clients/github/errors.js")>();
+  return {
+    ...actual,
+    mapGitHubError: vi.fn(),
+  };
+});
 
 describe("githubRequest", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should return request data", async () => {
-    vi.mocked(retry).mockResolvedValue({
-      data: {
-        name: "repo",
-      },
+  it("should return data on success", async () => {
+    const op = vi.fn().mockResolvedValue({
+      data: { name: "repo" },
+      headers: { "x-ratelimit-remaining": "59", "x-ratelimit-limit": "60" },
     });
 
-    const request = vi.fn();
+    const result = await githubRequest(op);
 
-    const result = await githubRequest(request);
-
-    expect(result).toEqual({
-      name: "repo",
-    });
-
-    expect(retry).toHaveBeenCalledTimes(1);
-
-    expect(logger.debug).toHaveBeenNthCalledWith(
-      1,
-      "Executing GitHub request..."
-    );
-
-    expect(logger.debug).toHaveBeenNthCalledWith(
-      2,
-      "GitHub request completed successfully."
-    );
+    expect(result).toEqual({ name: "repo" });
+    expect(op).toHaveBeenCalledTimes(1);
   });
 
-  it("should delegate errors to handleGitHubError", async () => {
-    const error = { status: 401 };
+  it("should throw GitHubServerError after 2 retries on 500", async () => {
+    const serverError = new GitHubServerError(500);
 
-    vi.mocked(retry).mockRejectedValue(error);
+    vi.mocked(mapGitHubError).mockReturnValue(serverError);
 
-    vi.mocked(handleGitHubError).mockImplementation(() => {
-      throw new Error("handled");
-    });
+    const op = vi.fn().mockRejectedValue({ status: 500 });
 
-    const request = vi.fn();
+    await expect(githubRequest(op)).rejects.toBeInstanceOf(GitHubServerError);
 
-    await expect(
-      githubRequest(request)
-    ).rejects.toThrow("handled");
+    // 3 llamadas: intento 0, 1, 2 (luego lanza)
+    expect(op).toHaveBeenCalledTimes(3);
+  }, 15_000);
 
-    expect(logger.error).toHaveBeenCalledWith(
-      "GitHub request failed.",
-      error
+  it("should throw GitHubRateLimitError after retry", async () => {
+    const rateLimitError = new GitHubRateLimitError(
+      Math.floor(Date.now() / 1000) + 1,
     );
 
-    expect(handleGitHubError).toHaveBeenCalledWith(
-      error,
-      {}
-    );
-  });
+    vi.mocked(mapGitHubError).mockReturnValue(rateLimitError);
+
+    const op = vi.fn().mockRejectedValue({ status: 429 });
+
+    await expect(githubRequest(op)).rejects.toBeInstanceOf(GitHubRateLimitError);
+
+    // 2 llamadas: intento 0 y 1 (solo un retry para rate limit)
+    expect(op).toHaveBeenCalledTimes(2);
+  }, 15_000);
 });
-

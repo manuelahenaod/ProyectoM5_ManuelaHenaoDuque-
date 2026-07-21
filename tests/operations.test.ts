@@ -1,29 +1,18 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { GithubClient } from "../src/clients/github/client.js";
+import { githubRequest } from "../src/clients/github/request.js";
 
-import {
-  listRepositories,
-  createRepository,
-} from "../src/github/operations.js";
-
-import { githubRequest } from "../src/github/request.js";
-import { logger } from "../src/utils/logging.js";
-
-vi.mock("../src/github/request.js", () => ({
+// Mock githubRequest para no hacer llamadas reales a GitHub
+vi.mock("../src/clients/github/request.js", () => ({
   githubRequest: vi.fn(),
 }));
 
-vi.mock("../src/utils/logging.js", () => ({
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
+// Mock env para que no falle al cargar
+vi.mock("../src/config/env.js", () => ({
+  env: { GITHUB_TOKEN: "fake-token", GITHUB_USERNAME: "test", GITHUB_TEST_REPO: "repo" },
 }));
 
-
-
-describe("listRepositories", () => {
+describe("GithubClient.listRepositories", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -31,62 +20,122 @@ describe("listRepositories", () => {
   it("should return formatted repositories", async () => {
     vi.mocked(githubRequest).mockResolvedValue([
       {
-        name: "mcp-server",
-        description: "Repository",
-        private: false,
+        full_name: "test/mcp-server",
         html_url: "https://github.com/test/mcp-server",
+        private: false,
+        description: "An MCP server",
+        owner: { login: "test" },
       },
     ]);
 
-    const result = await listRepositories();
+    const client = new GithubClient();
+    const result = await client.listRepositories();
 
     expect(result).toEqual([
       {
-        name: "mcp-server",
-        description: "Repository",
-        private: false,
+        fullName: "test/mcp-server",
         url: "https://github.com/test/mcp-server",
+        private: false,
+        description: "An MCP server",
+        owner: "test",
       },
     ]);
-
-    expect(logger.info).toHaveBeenCalled();
-    expect(githubRequest).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("createRepository", () => {
+describe("GithubClient.createRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should create and return a formatted repository", async () => {
     vi.mocked(githubRequest).mockResolvedValue({
-      name: "mcp-server",
-      description: "MCP Server",
+      full_name: "test/mcp-server",
+      html_url: "https://github.com/test/mcp-server",
       private: false,
-      html_url: "https://github.com/user/mcp-server",
+      description: "MCP Server",
+      owner: { login: "test" },
     });
 
-    const result = await createRepository(
-      "mcp-server",
-      "MCP Server"
-    );
+    const client = new GithubClient();
+    const result = await client.createRepository("mcp-server", "MCP Server");
 
     expect(result).toEqual({
-      name: "mcp-server",
-      description: "MCP Server",
+      fullName: "test/mcp-server",
+      url: "https://github.com/test/mcp-server",
       private: false,
-      url: "https://github.com/user/mcp-server",
+      description: "MCP Server",
+      owner: "test",
     });
 
     expect(githubRequest).toHaveBeenCalledTimes(1);
+  });
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'Creating repository "mcp-server".'
-    );
+  it("should create private repository", async () => {
+    vi.mocked(githubRequest).mockResolvedValue({
+      full_name: "test/secret-repo",
+      html_url: "https://github.com/test/secret-repo",
+      private: true,
+      description: null,
+      owner: { login: "test" },
+    });
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'Repository "mcp-server" created successfully.'
-    );
+    const client = new GithubClient();
+    const result = await client.createRepository("secret-repo", undefined, true);
+
+    expect(result.private).toBe(true);
+    expect(result.description).toBeNull();
+  });
+});
+
+describe("GithubClient.createIssue", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should create and return a formatted issue", async () => {
+    vi.mocked(githubRequest).mockResolvedValue({
+      number: 42,
+      html_url: "https://github.com/test/repo/issues/42",
+      title: "Bug: something is broken",
+    });
+
+    const client = new GithubClient();
+    const result = await client.createIssue("test", "repo", "Bug: something is broken");
+
+    expect(result).toEqual({
+      number: 42,
+      url: "https://github.com/test/repo/issues/42",
+      title: "Bug: something is broken",
+    });
+  });
+});
+
+describe("GithubClient.listIssues", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return formatted open issues", async () => {
+    vi.mocked(githubRequest).mockResolvedValue([
+      {
+        number: 1,
+        title: "First issue",
+        state: "open",
+        html_url: "https://github.com/test/repo/issues/1",
+      },
+    ]);
+
+    const client = new GithubClient();
+    const result = await client.listIssues("test", "repo");
+
+    expect(result).toEqual([
+      {
+        number: 1,
+        title: "First issue",
+        state: "open",
+        url: "https://github.com/test/repo/issues/1",
+      },
+    ]);
   });
 });

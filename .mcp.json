@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "github-mcp-server": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "c:\\Users\\45625\\Bootcamp Henry\\ProyectoM5",
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
