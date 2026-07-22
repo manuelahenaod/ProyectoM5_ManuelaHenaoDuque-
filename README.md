@@ -214,23 +214,40 @@ GITHUB_TEST_REPO=unRepositorioDePrueba
 
 ## 💻 Configuración en Antigravity / Claude Desktop
 
-Para integrar este servidor MCP en **Antigravity** o **Claude Desktop**, agrega la siguiente sección a tu archivo de configuración de cliente MCP (`.mcp.json` o `claude_desktop_config.json`):
+Abre Antigravity IDE.
+
+Ve a:
+
+```
+Agent → ... → MCP Servers → Manage MCP Servers → View Raw Config
+```
+
+Agrega la siguiente configuración:
 
 ```json
 {
   "mcpServers": {
     "github-mcp-server": {
-      "type": "stdio",
       "command": "node",
-      "args": ["dist/index.js"],
-      "cwd": "C:\\Ruta\\Absoluta\\A\\ProyectoM5",
-      "env": {
-        "GITHUB_TOKEN": "ghp_tuTokenGeneradoAqui"
-      }
+      "args": [
+        "dist/index.js"
+      ],
+      "cwd": "C:\\Users\\TU_USUARIO\\ProyectoM5"
     }
   }
 }
 ```
+
+Reemplaza la ruta de `cwd` por la ubicación de tu proyecto.
+
+Después de guardar la configuración:
+
+1. Regresa al panel **MCP Servers**.
+2. Haz clic en **Refresh** o reinicia Antigravity IDE.
+3. Verifica que el servidor aparezca con estado **Running**.
+
+---
+
 
 ---
 
