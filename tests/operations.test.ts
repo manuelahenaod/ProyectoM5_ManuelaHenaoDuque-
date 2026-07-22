@@ -139,3 +139,70 @@ describe("GithubClient.listIssues", () => {
     ]);
   });
 });
+
+describe("GithubClient.addCommentToIssue", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should create and return formatted comment", async () => {
+    vi.mocked(githubRequest).mockResolvedValue({
+      id: 12345,
+      html_url: "https://github.com/test/repo/issues/1#issuecomment-12345",
+      body: "Test comment body",
+    });
+
+    const client = new GithubClient();
+    const result = await client.addCommentToIssue("test", "repo", 1, "Test comment body");
+
+    expect(result).toEqual({
+      id: 12345,
+      url: "https://github.com/test/repo/issues/1#issuecomment-12345",
+      body: "Test comment body",
+    });
+  });
+});
+
+describe("GithubClient.closeIssue", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should close and return formatted closed issue state", async () => {
+    vi.mocked(githubRequest).mockResolvedValue({
+      number: 1,
+      state: "closed",
+    });
+
+    const client = new GithubClient();
+    const result = await client.closeIssue("test", "repo", 1);
+
+    expect(result).toEqual({
+      number: 1,
+      state: "closed",
+    });
+  });
+});
+
+describe("GithubClient.createLabel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should create and return formatted label", async () => {
+    vi.mocked(githubRequest).mockResolvedValue({
+      name: "bug",
+      color: "fc2929",
+      description: "Something isn't working",
+    });
+
+    const client = new GithubClient();
+    const result = await client.createLabel("test", "repo", "bug", "fc2929", "Something isn't working");
+
+    expect(result).toEqual({
+      name: "bug",
+      color: "fc2929",
+      description: "Something isn't working",
+    });
+  });
+});

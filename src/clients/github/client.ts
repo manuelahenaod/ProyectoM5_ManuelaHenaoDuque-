@@ -6,6 +6,9 @@ import {
   IssueSummary,
   Repository,
   RepoSummary,
+  CreatedComment,
+  ClosedIssue,
+  CreatedLabel,
 } from "../../schemas/github.js";
 import { githubRequest } from "./request.js";
 
@@ -170,6 +173,69 @@ export class GithubClient {
       url: `https://github.com/${owner}/${repo}/blob/${branch}/${path}`,
       path,
       branch,
+    };
+  }
+
+  async addCommentToIssue(
+    owner: string,
+    repo: string,
+    number: number,
+    body: string,
+  ): Promise<CreatedComment> {
+    const data = await githubRequest(() =>
+      this.octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: number,
+        body,
+      }),
+    );
+    return {
+      id: data.id,
+      url: data.html_url,
+      body: data.body ?? "",
+    };
+  }
+
+  async closeIssue(
+    owner: string,
+    repo: string,
+    number: number,
+  ): Promise<ClosedIssue> {
+    const data = await githubRequest(() =>
+      this.octokit.issues.update({
+        owner,
+        repo,
+        issue_number: number,
+        state: "closed",
+      }),
+    );
+    return {
+      number: data.number,
+      state: data.state ?? "closed",
+    };
+  }
+
+  async createLabel(
+    owner: string,
+    repo: string,
+    name: string,
+    color: string,
+    description?: string,
+  ): Promise<CreatedLabel> {
+    const data = await githubRequest(() =>
+      this.octokit.issues.createLabel({
+        owner,
+        repo,
+        name,
+        color,
+        description,
+      }),
+    );
+    return {
+      name: data.name,
+      color: data.color,
+      description: data.description ?? null,
     };
   }
 }

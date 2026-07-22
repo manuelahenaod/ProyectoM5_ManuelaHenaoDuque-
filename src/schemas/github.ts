@@ -86,6 +86,32 @@ export const createFileSchema = z.object({
     .describe("Rama destino del commit (default: 'main')"),
 });
 
+export const addCommentToIssueSchema = z.object({
+  owner: z.string().min(1).describe("Dueño del repositorio"),
+  repo: z.string().min(1).describe("Nombre del repositorio"),
+  number: z.number().int().positive().describe("Número del issue"),
+  body: z.string().min(1).describe("Cuerpo del comentario"),
+});
+
+export const closeIssueSchema = z.object({
+  owner: z.string().min(1).describe("Dueño del repositorio"),
+  repo: z.string().min(1).describe("Nombre del repositorio"),
+  number: z.number().int().positive().describe("Número del issue a cerrar"),
+});
+
+export const createLabelSchema = z.object({
+  owner: z.string().min(1).describe("Dueño del repositorio"),
+  repo: z.string().min(1).describe("Nombre del repositorio"),
+  name: z.string().min(1).max(50).describe("Nombre del label"),
+  color: z
+    .string()
+    .regex(/^[a-fA-F0-9]{6}$/, {
+      message: "El color debe ser un código hexadecimal de 6 dígitos sin '#' (ej: 'ff0000').",
+    })
+    .describe("Color hexadecimal de 6 dígitos sin '#' (ej: 'ff0000')"),
+  description: z.string().optional().describe("Descripción opcional del label"),
+});
+
 // ─── Data Schemas (used in output) ───────────────────────────────────────────
 
 export const RepoSummarySchema = z.object({
@@ -123,6 +149,23 @@ export const CreatedFileSchema = z.object({
   branch: z.string(),
 });
 
+export const CreatedCommentSchema = z.object({
+  id: z.number(),
+  url: z.string().url(),
+  body: z.string(),
+});
+
+export const ClosedIssueSchema = z.object({
+  number: z.number(),
+  state: z.string(),
+});
+
+export const CreatedLabelSchema = z.object({
+  name: z.string(),
+  color: z.string(),
+  description: z.string().nullable(),
+});
+
 // ─── Output Schemas (structuredContent) ──────────────────────────────────────
 
 export const CreateRepositoryOutputSchema = z.object({
@@ -150,6 +193,21 @@ export const CreateFileOutputSchema = z.object({
   data: CreatedFileSchema,
 });
 
+export const AddCommentToIssueOutputSchema = z.object({
+  ok: z.literal(true),
+  data: CreatedCommentSchema,
+});
+
+export const CloseIssueOutputSchema = z.object({
+  ok: z.literal(true),
+  data: ClosedIssueSchema,
+});
+
+export const CreateLabelOutputSchema = z.object({
+  ok: z.literal(true),
+  data: CreatedLabelSchema,
+});
+
 // ─── Inferred Types ───────────────────────────────────────────────────────────
 
 export type RepoSummary = z.infer<typeof RepoSummarySchema>;
@@ -157,9 +215,15 @@ export type Repository = z.infer<typeof RepositorySchema>;
 export type CreatedIssue = z.infer<typeof CreatedIssueSchema>;
 export type IssueSummary = z.infer<typeof IssueSummarySchema>;
 export type CreatedFile = z.infer<typeof CreatedFileSchema>;
+export type CreatedComment = z.infer<typeof CreatedCommentSchema>;
+export type ClosedIssue = z.infer<typeof ClosedIssueSchema>;
+export type CreatedLabel = z.infer<typeof CreatedLabelSchema>;
 
 export type CreateRepositoryOutput = z.infer<typeof CreateRepositoryOutputSchema>;
 export type CreateIssueOutput = z.infer<typeof CreateIssueOutputSchema>;
 export type ListIssuesOutput = z.infer<typeof ListIssuesOutputSchema>;
 export type ListRepositoriesOutput = z.infer<typeof ListRepositoriesOutputSchema>;
 export type CreateFileOutput = z.infer<typeof CreateFileOutputSchema>;
+export type AddCommentToIssueOutput = z.infer<typeof AddCommentToIssueOutputSchema>;
+export type CloseIssueOutput = z.infer<typeof CloseIssueOutputSchema>;
+export type CreateLabelOutput = z.infer<typeof CreateLabelOutputSchema>;
