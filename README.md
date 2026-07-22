@@ -169,7 +169,7 @@ Puedes interactuar con el agente pidiéndole flujos encadenados:
 
 1. **Clonar e instalar dependencias:**
    ```bash
-   git clone <URL_DE_TU_REPOSITORIO>
+   git clone https://github.com/manuelahenaod/ProyectoM5_ManuelaHenaoDuque-
    cd ProyectoM5
    npm install
    ```
